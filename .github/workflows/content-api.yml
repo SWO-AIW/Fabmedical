@@ -6,9 +6,9 @@ on:
     branches:
     - main
     paths:
-    - 'content-api/**'
-    # - api.deployment.yml
-    # - api.service.yml
+    - 'content-web/**'
+    - api.deployment.yml  # These two file
+    - api.service.yml     # entries here
 
   # Configure workflow to also support triggering manually
   workflow_dispatch:
@@ -61,3 +61,21 @@ jobs:
     #     imagepullsecrets: |
     #       ingress-demo-secret
     #     namespace: ingress-demo
+
+    - uses: Azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: '${{ env.clusterName }}'
+        resource-group: '${{ env.resourceGroupName }}'
+            
+    - name: Deploy to AKS
+      uses: azure/k8s-deploy@v1
+      with:
+        manifests: |
+          api.deployment.yml
+          api.service.yml
+        images: |
+          ${{ env.containerRegistry }}/${{ env.imageRepository }}:${{ env.tag }}
+        imagepullsecrets: |
+          ingress-demo-secret
+        namespace: ingress-demo
